@@ -1,0 +1,267 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper, margin=0.9in, 10pt]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{algorithm, algorithmic}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage[makeroom]{cancel}
+
+\title{CSC373 A4}
+\author{Isaac Ng, Nathan Chao, Jean Li}
+\date{December 7, 2020}
+
+\newcommand{\bigO}{\mathcal{O}}
+
+\begin{document}
+
+\maketitle
+\begin{enumerate}
+    \item  
+    \begin{enumerate}
+        \item Note: In this problem, an edge from tower $n$ to tower $(n + 1)$ is an edge from tower $n$ to tower 1 and an edge from tower 1 to tower (1 - 1) is an edge from tower 1 to tower $n$.\\Binary Integer Linear Program solving this problem\\
+        I want to define my two binary variables for this section.\\
+        $forward_{k, x}$ is for request k and edge (x, x+1), 1 represents this cable being used while 0 shows its inactivity.\\
+        Similarly, $backward_{k, x}$ is for request k and edge (x, x-1), 1 representing the cable being used and 0 being its inactivity.\\
+        In a given request k, we are given (i, j, c) where i is the starting location, j is the final destination, and c is the byte size of the request.\\
+        Here is the BILP:
+        \begin{align*}
+            min [ max_{x \in E} &( \sum_k c_k * forward_{k,x}, \sum_k c_k * backward_{k,x} ) ]\\
+                forward_{k,i} &= forward_{k,i+1} = ... = forward_{k,j-1} \text{for each request k} \tag{1}\\
+                backward_{k,i} &= backward_{k,i-1} = ... = backward_{k,j+1} \text{for each request k} \tag{2}\\
+                forward_{k,j} &= forward_{k,j+1} = ... = forward_{k,i-1} = 0 \text{for each request k} \tag{3}\\
+                backward_{k,j} &= backward_{k,j-1} = ... = backward_{k,i+1} = 0 \text{for each request k} \tag{4}\\
+                forward_{k, i} &+ backward_{k,i} = 1 \tag{5} \text{for each request k} \\
+                forward_{k,x}, &backward_{k,x} \in \{0, 1\} \tag{$\forall k, x$}
+        \end{align*}
+        
+        \newpage
+        \item 2-approximation relaxing our ILP\\
+        Since there are k requests and n towers, we will be dealing with two n by k matrices of binary values when dealing with forward and backward.\\
+        Consider the LP optimal solutions $forward^*$ and $backward^*$.\\
+        Let $\hat{forward}_{k, x} = 1$ whenever $forward^* \geq 0.5$ and $\hat{forward}_{k, x} = 0$ otherwise.\\
+        Let $\hat{backward}_{k, x} = 1$ whenever $backward^* > 0.5$ and $\hat{backward}_{k, x} = 0$ otherwise.\\
+        \textbf{Claim 1: $\hat{forward}$ and $\hat{backward}$ is a feasible solution of the ILP.}\\
+        Notice first, that statement (5) is satisfied. This is because in the LP, one value must be $\geq$ 0.5 while the other is $\leq$ 0.5. Therefore, one will round up to 1 while the other rounds down to 0. The case of both being 0.5 is taken care of by making one of the two variables $>$ instead of $\geq$.\\
+        Also, from our rounding, the last statement holds true since all our variables round to 0 or 1.\\
+        From our LP to the BILP, statements (3) and (4) stay the same since they had values set to 0 and so, after rounding, remain at 0.\\
+        Statements (1) and (2) also stay the same since rounding the same number will give the same results.\\
+        These two statements however, are used to determine the direction the request will travel.\\
+        Notice that either $forward_{k, i}$ or $backward_{k,i}$ are set to 1 after our rounding. This means that for each request, only one of (1) and (2) will have a value of 0 and the other will have a value of 1.\\
+        Therefore, these values provide a feasible solution since each request will travel in one direction from its starting location to its final destination.\\
+        We have shown that $\hat{forward}$ and $\hat{backward}$ is a feasible solution of the ILP.\\
+        \\
+        \textbf{Claim 2: $max_{i \in E} &( \sum_k c_k * \hat{forward}_{k,i}, \sum_k c_k * \hat{backward}_{k,i} ) \leq 2 * max_{i \in E} &( \sum_k c_k * forward_{k,i}^*, \sum_k c_k * backward_{k,i}^* )$}\\
+        The load on a cable only increases when some $forward_{k,x}^* \in [0.5, 1]$ is rounded up to 1 or when some $backward_{k,x}^* \in (0.5, 1]$ is rounded up to 1.\\
+        This means that $forward_{k,x}^* \times 2 \geq \hat{forward}_{k,x}$ and $backward_{k,x}^* \times 2 \geq \hat{backward}_{k,x}$ for each request k and each tower x.\\
+        This claim has been proven since each $forward_{k,x}^*$ and $backward_{k,x}^*$ are at most 2 times greater than $\hat{forward}_{k,x}$ and $\hat{backward}_{k,x}$.\\
+        \\
+         Therefore, since we know that relaxed LP's solution: $max[forward_{k,x}^*, backward_{k,x}^* ] \leq $ Optimal solution, we can say the following.\\
+         $\hat{forward}, \hat{backward}$ is a solution to this problem with its maximum load being at most $2 \times$ LP optimal value $\leq 2 \times$ ILP optimal value.\\
+         We have shown a 2-approximation by relaxing our ILP.
+    \end{enumerate}
+    
+    % a) Note: In this problem, an edge from tower $n$ to tower $(n + 1)$ is an edge from tower $n$ to tower 1 and an edge from tower 1 to tower (1 - 1) is an edge from tower 1 to tower $n$.\\Binary Integer Linear Program solving this problem\\
+    % I want to define my two binary variables for this section.\\
+    % $forward_{k, x}$ is for request k and edge (x, x+1), 1 represents this cable being used while 0 shows its inactivity.\\
+    % Similarly, $backward_{k, x}$ is for request k and edge (x, x-1), 1 representing the cable being used and 0 being its inactivity.\\
+    % In a given request k, we are given (i, j, c) where i is the starting location, j is the final destination, and c is the byte size of the request.\\
+    % Here is the BILP
+    % \begin{align*}
+    %     min [ max_{x \in E} &( \sum_k c_k * forward_{k,x}, \sum_k c_k * backward_{k,x} ) ]\\
+    %         forward_{k,i} &= forward_{k,i+1} = ... = forward_{k,j-1} \text{for each request k} \tag{1}\\
+    %         backward_{k,i} &= backward_{k,i-1} = ... = backward_{k,j+1} \text{for each request k} \tag{2}\\
+    %         forward_{k,j} &= forward_{k,j+1} = ... = forward_{k,i-1} = 0 \text{for each request k} \tag{3}\\
+    %         backward_{k,j} &= backward_{k,j-1} = ... = backward_{k,i+1} = 0 \text{for each request k} \tag{4}\\
+    %         forward_{k, i} &+ backward_{k,i} = 1 \tag{5} \text{for each request k} \\
+    %         forward_{k,x}, &backward_{k,x} \in \{0, 1\} \tag{$\forall k, x$}
+    % \end{align*}
+    
+    % \\ b) 2-approximation relaxing our ILP\\
+    % Since there are k requests and n towers, we will be dealing with two n by k matrices of binary values when dealing with forward and backward.\\
+    % Consider the LP optimal solutions $forward^*$ and $backward^*$.\\
+    % Let $\hat{forward}_{k, x} = 1$ whenever $forward^* \geq 0.5$ and $\hat{forward}_{k, x} = 0$ otherwise.\\
+    % Let $\hat{backward}_{k, x} = 1$ whenever $backward^* > 0.5$ and $\hat{backward}_{k, x} = 0$ otherwise.\\
+    % \textbf{Claim 1: $\hat{forward}$ and $\hat{backward}$ is a feasible solution of the ILP.}\\
+    % Notice first, that statement (5) is satisfied. This is because in the LP, one value must be $\geq$ 0.5 while the other is $\leq$ 0.5. Therefore, one will round up to 1 while the other rounds down to 0. The case of both being 0.5 is taken care of by making one of the two variables $>$ instead of $\geq$.\\
+    % Also, from our rounding, the last statement holds true since all our variables round to 0 or 1.\\
+    % From our LP to the BILP, statements (3) and (4) stay the same since they had values set to 0 and so, after rounding, remain at 0.\\
+    % Statements (1) and (2) also stay the same since rounding the same number will give the same results.\\
+    % These two statements however, are used to determine the direction the request will travel.\\
+    % Notice that either $forward_{k, i}$ or $backward_{k,i}$ are set to 1 after our rounding. This means that for each request, only one of (1) and (2) will have a value of 0 and the other will have a value of 1.\\
+    % Therefore, these values provide a feasible solution since each request will travel in one direction from its starting location to its final destination.\\
+    % We have shown that $\hat{forward}$ and $\hat{backward}$ is a feasible solution of the ILP.\\
+    % \\
+    % \textbf{Claim 2: $max_{i \in E} &( \sum_k c_k * \hat{forward}_{k,i}, \sum_k c_k * \hat{backward}_{k,i} ) \leq 2 * max_{i \in E} &( \sum_k c_k * forward_{k,i}^*, \sum_k c_k * backward_{k,i}^* )$}\\
+    % The load on a cable only increases when some $forward_{k,x}^* \in [0.5, 1]$ is rounded up to 1 or when some $backward_{k,x}^* \in (0.5, 1]$ is rounded up to 1.\\
+    % This means that $forward_{k,x}^* \times 2 \geq \hat{forward}_{k,x}$ and $backward_{k,x}^* \times 2 \geq \hat{backward}_{k,x}$ for each request k and each tower x.\\
+    % This claim has been proven since each $forward_{k,x}^*$ and $backward_{k,x}^*$ are at most 2 times greater than $\hat{forward}_{k,x}$ and $\hat{backward}_{k,x}$.\\
+    % \\
+    %  Therefore, since we know that relaxed LP's solution: $max[forward_{k,x}^*, backward_{k,x}^* ] \leq $ Optimal solution, we can say the following.\\
+    %  $\hat{forward}, \hat{backward}$ is a solution to this problem with its maximum load being at most $2 \times$ LP optimal value $\leq 2 \times$ ILP optimal value.\\
+    %  We have shown a 2-approximation by relaxing our ILP.\\
+    \newpage
+    
+    \item 
+    \begin{enumerate}
+        \item The algorithm schedules all tasks. A task $i$ is only scheduled at time $s_i$ which is the earliest time at which both worker $w_i$ and machine $m_i$ become available. This means each task is only scheduled when the required worker and machine are available. This satisfies all constraints.
+        
+        \item Assume for a contradiction that there is exists an idle worker that could be working on a yet-to-be-done task. This means that at time $t$, there exists an unscheduled task $i$ and that neither worker $w_i$ nor machine $m_i$ get used at time $t$. Since at time $t$, the algorithm uses neither worker $w_i$ nor $m_i$, at time $t$, $s_{i}= t$. Since the algorithm schedules neither worker $w_i$ nor  machine $m_i$ at time $t$, $s_i$ will never increase from $t$, so the algorithm will schedule $i$ to start at time $t$. This is a contradiction so there can never be an idle worker if she could be working on a yet-to-be-done task.
+        
+        \item Let $T$ be the overall finish time of the greedy schedule.\\
+        Let $T^*$ be the minimum possible overall finish time of any schedule.\\
+        Let $W_{\text{max}} = \max_jW_j$, where $W_j$ is the total processing time of all jobs $i$ with $w_i = j$.\\
+        Let $M_{\text{max}} = \max_kM_k$, where $M_k$ is the total processing time of all jobs $i$ with $m_i = k$.\\
+        Let $i$ be the task that finishes last in the schedule produced by the greedy algorithm. \\
+        Let $W_{iwork}$ be the time spent working by worker $i$ up to $s_i$.  \\
+        Let $W_{iidle}$ be the time spent idle by worker $i$ up to $s_i$. \\
+        Let $M_{m_i}$ be the total processing time of all jobs $j$ with $m_j = {m_i}$.\\
+        Fact (1): By part (b) and since $i$ is the last task, it follows that whenever worker $w_i$ is idle, $m_i$ is being used. This means $M_{m_i} \geq W_{iidle} + p_i$.
+        \begin{align*}
+        T &= s_i + p_i\\
+        T &= W_{iwork} + W_{iidle}+ p_i \\
+        T &\leq  W_\max + W_{iidle}+ p_i \\
+        T &\leq  W_\max + M_{m_i} \tag{By fact (1)}\\
+        T &\leq  W_\max + M_\max \\
+        T &\leq  2\max(W_{\max}, M_{\max}) \\
+        T &\leq  2T^* \\
+        \end{align*}
+        Therefore the algorithm achieves a 2-approximation.
+    \end{enumerate}
+    
+%     q2\\a)\\
+% The algorithm schedules all tasks. A task $i$ is only scheduled at time $s_i$ which is the earliest time at which both worker $w_i$ and machine $m_i$ become available. This means each task is only scheduled when the required worker and machine are available. This satisfies all constraints. \\
+% \\
+% b)\\
+% Assume for a contradiction that there is exists an idle worker that could be working on a yet-to-be-done task. This means that at time $t$, there exists an unscheduled task $i$ and that neither worker $w_i$ nor machine $m_i$ get used at time $t$. Since at time $t$, the algorithm uses neither worker $w_i$ nor $m_i$, at time $t$, $s_{i}= t$. Since the algorithm schedules neither worker $w_i$ nor  machine $m_i$ at time $t$, $s_i$ will never increase from $t$, so the algorithm will schedule $i$ to start at time $t$. This is a contradiction so there can never be an idle worker if she could be working on a yet-to-be-done task.\\
+% \\
+% c)\\
+% Let $T$ be the overall finish time of the greedy schedule.\\
+% Let $T^*$ be the minimum possible overall finish time of any schedule.\\
+% Let $W_{\text{max}} = \max_jW_j$, where $W_j$ is the total processing time of all jobs $i$ with $w_i = j$.\\
+% Let $M_{\text{max}} = \max_kM_k$, where $M_k$ is the total processing time of all jobs $i$ with $m_i = k$.\\
+% Let $i$ be the task that finishes last in the schedule produced by the greedy algorithm. \\
+% Let $W_{iwork}$ be the time spent working by worker $i$ up to $s_i$.  \\
+% Let $W_{iidle}$ be the time spent idle by worker $i$ up to $s_i$. \\
+% Let $M_{m_i}$ be the total processing time of all jobs $j$ with $m_j = {m_i}$.\\
+% Fact (1): By part b) and since $i$ is the last task, it follows that whenever worker $w_i$ is idle, $m_i$ is being used. This means $M_{m_i} \geq W_{iidle} + p_i$.
+% \begin{align*}
+% T &= s_i + p_i\\
+% T &= W_{iwork} + W_{iidle}+ p_i \\
+% T &\leq  W_\max + W_{iidle}+ p_i \\
+% T &\leq  W_\max + M_{m_i} \tag{By fact (1)}\\
+% T &\leq  W_\max + M_\max \\
+% T &\leq  2\max(W_\max, M_\max) \\
+% T &\leq  2T^* \\
+% \end{align*}
+% Therefore the algorithm achieves a 2-approximation.
+    \newpage
+    
+    \item \begin{enumerate}
+        \item We know the LP relaxation of the given ILP has an optimal solution $x^*$ in which $\forall v \in V, x^*_v \in \{0, \frac{1}{2}, 1\}$. We can convert $x^*$ to an integer solution $y$ by rounding $\frac{1}{2}$ up to 1. 
+        
+        Let $S'=\{v \in V: x^*_v = 1 \vee x^*_v = \frac{1}{2}$\}. Let $y$ be a solution to the given ILP where $y_v=1$ if $v \in S'$. Then $y$ meets both constraints of the given ILP. Therefore, $S'$ is a vertex cover of $G$ (but not necessarily a minimum vertex cover).
+    
+        From the constraints of the LP relaxation, we know that $x_u+x_v \geq 1, \forall (u, v) \in E$. \\Thus, $\forall (u, v) \in E, x^*_u=\frac{1}{2} \Rightarrow x^*_v \geq \frac{1}{2}$. This means that $\forall (u, v) \in E, (x^*_u=\frac{1}{2} \vee x^*_v=\frac{1}{2}) \Rightarrow u, v$ are both in $S'$.
+        
+        Note that $S$ is just $S'$, except with all vertices $v$ where $x^*_v=\frac{1}{2} \wedge c(v)=3$ removed. By the definition of 4-colouring, $\forall (u, v) \in E, c(u) \neq c(v)$, so at most one of $u$ or $v$ can belong to $V^{\frac{1}{2}}_3$. If one of $u$ or $v$ belongs to $V_3^{\frac{1}{2}}$, then the other must be in set $S$. 
+        
+        Thus, $S=\{v \in V: x^*_v=1 \vee (x^*_v=\frac{1}{2} \wedge v \not\in V^{\frac{1}{2}}_3)\}$ is still a vertex cover of $G$. \hfill $\blacksquare$
+        
+        \item Let $S^*$ be a minimum vertex cover of $G$. Let ${\color{red}S^k}= \{v \in V, x^*_v=k\}$ for $k \in \{0, \frac{1}{2}, 1\}$, where $x^*$ is an optimal solution to the LP relaxation of the given ILP.
+        
+        \begin{align*}
+            |S^*| \geq \frac{1}{2}|{\color{red}S^\frac{1}{2}}| + |{\color{red}S^1}| \tag{claim (A), {\color{blue}proven at the bottom of the page}}
+        \end{align*}
+        
+        Since $S^{\frac{1}{2}}$ is the union of $V_3^{\frac{1}{2}}, V_2^{\frac{1}{2}}, V_1^{\frac{1}{2}}, \text{ and } V_0^{\frac{1}{2}}$, and these sets do not have any overlap, and $|V_3^{\frac{1}{2}}| \geq |V_2^{\frac{1}{2}}| \geq |V_1^{\frac{1}{2}}| \geq |V_0^{\frac{1}{2}}|$, then 
+        %
+        \begin{align*} 
+            |V_3^{\frac{1}{2}}| \geq \frac{1}{4}|S^{\frac{1}{2}}| \tag{B}
+        \end{align*}
+        %
+        \begin{align*}
+            |S|&=|S^1|+|S^{\frac{1}{2}}| - |V_3^{\frac{1}{2}}| \tag{by definition of $S$}\\
+            & \leq |S^1| + \frac{3}{4}|S^{\frac{1}{2}}| \tag{by (B)}\\
+            &= \frac{3}{2} (\frac{1}{2} |S^{\frac{1}{2}}| + |S^1|) - \frac{1}{2} |S^1|\\
+            & \leq \frac{3}{2} |S^*| - \frac{1}{2} |S^1| \tag{by claim (A)}\\
+            & \leq \frac{3}{2} |S^*|
+        \end{align*}
+        Since $|S|$ is at most $\frac{3}{2}$ the size of the smallest vertex cover, the algorithm achieves a \\ $\frac{3}{2}$-approximation. \hfill $\blacksquare$
+        \\
+        
+        \emph{{\color{blue}Proof of claim}} {\color{blue}(A)}. 
+        
+        Let $S^*$ be a minimum vertex cover of $G$. Let ${\color{red}S^k}= \{v \in V, x^*_v=k\}$ for $k \in \{0, \frac{1}{2}, 1\}$, where $x^*$ is an optimal solution to the LP relaxation of the given ILP. We want to show $|S^*| \geq |{\color{red}S^1}| + \frac{1}{2}|{\color{red}S^{\frac{1}{2}}}|$. 
+        
+        Let $OPT(LP)$ and $OPT(ILP)$ be $\sum_{v \in V} x_v$ for an optimal solution to the linear program and integer linear program respectively. Since the linear program has a greater range of possible solutions,
+        \begin{align*}
+            OPT(LP) \leq OPT(ILP) = |S^*| \tag{C}
+        \end{align*}
+        
+        Since each member of $S^1$ contributes a value of 1 to the sum and each member of $S^{\frac{1}{2}}$ contributes a value of $\frac{1}{2}$ to the sum of the LP's objective function, 
+        \begin{align*}
+            OPT(LP) = \sum_{v \in V}x^*_v = |S^1| + \frac{1}{2}|S^{\frac{1}{2}}| \tag{D}
+        \end{align*}
+         
+        By (C) and (D), $|S^*| = OPT(ILP) \geq OPT(LP) = |S^1| + \frac{1}{2}|S^{\frac{1}{2}}|$. Therefore,
+        \begin{align*}
+            |S^*| \geq |S^1| + \frac{1}{2}|S^{\frac{1}{2}}|
+        \end{align*}
+        \hfill $\blacksquare$
+    \end{enumerate} 
+    \newpage
+    
+    \item 
+    % maximize number of clauses j where sum of P_j > 0 or sum of N_j != |N_j|
+    \begin{enumerate}
+        \item \begin{align*}
+            \text{maximize } & \sum_{j=1}^{m} z_j\\
+            \text{subject to } & z_j \leq \sum_{i \in P_j} y_i + \sum_{i \in N_j} (1 - y_i) \text{ for all } j \in [m]\\
+            & y_i, z_j \in \{0, 1\} \text{ for all } i \in \{1, ..., n\}, j \in \{1, ..., m\}
+        \end{align*}
+        
+        \item For a clause $C_j$ to NOT be satisfied, all its literals must evaluate to FALSE. The probability that $C_j$ is not satisfied is $\Pi_{i \in P_j} (1 - f(y_i^*)) \times \Pi_{i \in N_j} f(y_i^*)$.
+        %
+        \begin{align*}
+            f(y^*_i) & \geq 1 - 4^{(-y^*_i)} \tag{from definition of $f(y)$} \\
+            1 - f(y^*_i) &\leq 1 - (1 - 4^{(-y^*_i)})\\
+            &= 4^{(-y^*_i)}
+        \end{align*}
+        %
+        \begin{align*}
+            f(y^*_i) \leq 4^{y^*_i - 1} \tag{from definition of $f(y)$}\\
+        \end{align*}
+        From the above,
+        \begin{align*}
+            Probability(C_j \text{ is not satisfied}) &= \Pi_{i \in P_j} (1 - f(y_i^*)) \times \Pi_{i \in N_j} f(y_i^*) \\
+            &\leq 4^{-\Sigma_{i \in P_j}(y^*_i)} \times 4^{-\Sigma_{i \in N_j}1 - y^*_i}\\
+            &\leq 4^{-z_j^*} \tag{by constraint in LP in (a)}
+        \end{align*}
+        \hfill $\blacksquare$
+        
+        \item From the hint, we know $g(\lambda) \geq \lambda \times g(1)$ for all $\lambda \in [0, 1]$. 
+        
+        Note that $g(1)=1-\frac{1}{4}=\frac{3}{4}.$
+        %
+        \begin{align*}
+            E[\text{number of clauses satisfied using }\mathcal{A}] &= \Sigma_{j=1}^{m} Probability(C_j \text{ is satisfied})\\
+            &= \Sigma_{j=1}^{m} [1 - Probability(C_j \text{ is not satisfied})]\\
+            & \geq \Sigma_{j = 1}^{m} 1 - 4^{-z^*_j} \tag{from part (b)}\\
+            &\geq \Sigma_{j=1}^{m}g(1) \times z^*_j \tag{from the hint}\\
+            &= \Sigma_{j=1}^{m}\frac{3}{4} \times z^*_j\\
+            &= \frac{3}{4} \Sigma_{j=1}^{m}z^*_j\\
+            &= \frac{3}{4} \times \text{optimal solution to LP relaxation}\\
+            & \geq \frac{3}{4} \times \text{optimal solution to ILP} \tag{because ILP has a smaller range of possible solutions}\\
+            &= 1 / \frac{4}{3} \times \text{optimal solution to ILP}\\
+            & \
+        \end{align*}
+        Therefore, $\mathcal{A}$ is a 4/3-approximation algorithm. \hfill $\blacksquare$
+    \end{enumerate}
+\end{enumerate}
+
+\end{document}

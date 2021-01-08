@@ -1,0 +1,151 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper, margin=0.9in, 10pt]{geometry}
+\usepackage{amsmath, amssymb}
+\usepackage{algorithm, algorithmic}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage[makeroom]{cancel}
+
+\title{CSC373 A3}
+\author{Isaac Ng, Nathan Chao, Jean Li}
+\date{November 23, 2020}
+
+\newcommand{\bigO}{\mathcal{O}}
+
+\begin{document}
+
+\maketitle
+\section{Question 1}
+\begin{enumerate}
+    \item[(a)]Let $x$ be the number of shadow clones. Let $y$ be the number of ransengans thrown.
+    \begin{align*}
+        \text{max } 5x &+ 8y\\
+        41x + 23y &\leq 450\\
+        27x + 39y&\leq 350\\
+        x, y &\geq 0
+    \end{align*}
+    \item[(b)] Let $m_1$ be the multiplier of the first inequality of the LP in standard form. Let $m_2$ be the multiplier of the second inequality of the LP in standard form.
+    
+    Then we have $(41m_1 + 27m_2)x + (23m_1 + 39m_2)y \leq 450m_1 + 350m_2$. This gives us the dual:
+    \begin{align*}
+        \text{min }450m_1 &+ 350m_2\\
+        41m_1 + 27m_2 &\geq 5\\
+        23m_1 + 39m_2 &\geq 8\\
+        m_1, m_2 \geq 0
+    \end{align*}
+\end{enumerate}
+
+\section{Question 2}
+For each job $i$, let $s_i$ be the number of minutes after the tasks are started that job $i$ is started, and let $d_i$ be the duration in minutes of job $i$. 
+We also have a variable $T$, which is an upper bound on amount of time to complete all the tasks. The LP is as follows:
+\\\\
+Minimize $T$ \\
+Subject to:
+
+$T \geq s_i + d_i, \text{for } i \in \{1, 2, ...,8\}$
+
+$s_j \geq s_i + d_i, \text{for } i, j \in \{1, 2, ..., 8\}  \text{ s.t. } i\neq j \text{ and } T_j \text{ depends on } T_i$
+
+$s_i \geq 0, \text{for } i \in \{1, 2,..., 8\}$
+\\\\
+The third constraint ensures that no task is started before ``the time when task are started". The second constraint ensures that dependencies are fulfilled. The first constraint ensures that $T$ is at least the completion time of each job. Therefore $T$ is an upper bound on the overall completion time. Since we are minimizing $T$ subject to this, in the optimal solution $T$ will always be equal to the overall completion time because there are no other constraints on $T$. Therefore, the optimal solution to this LP finds the minimum amount of time to complete all tasks.
+
+\newpage
+\section{Question 3}
+\begin{enumerate}
+    \item[(a)] Polynomial-time algorithm:
+    \begin{itemize}
+        \item Set chakra\_levels to be a list of tuples. There is a tuple for every ninja and each tuple is of the following form: (chakra level, ninja number)
+        \item Using mergesort, sort chakra\_levels by chakra level in increasing order
+        \item Make chakra\_levels a doubly linked list for constant time removal of the first and last elements
+        \item While there are ninjas in chakra\_levels, pair the first ninja in the list with the last ninja and remove the first and last ninjas from chakra\_levels
+        \item If all of these pairings have the same chakra level, return YES, otherwise return NO
+    \end{itemize}
+    
+    Proof of correctness:\\
+    Claim: If the ninjas can be partitioned into $n$ squads of 2 ninja each such that the total chakra level in each squad is the same, the algorithm will find a set of pairings that satisfies this property.\\
+    Assume that the ninja can be partitioned into $n$ squads of 2 ninja each such that the total chakra level in each squad is the same.\\
+    If $n$ is 0, we are done because there will be no pairings and we will return YES.\\
+    If $n > 0$: \\
+    Consider chakra\_levels after it has been sorted.\\
+    Let \textit{min} be the set of ninjas with the lowest chakra level in chakra\_levels.\\
+    Let \textit{max} be the set of ninjas with the highest chakra level in chakra\_levels.\\
+    Claim: To produce a set of valid pairings, each ninja in \textit{min} must be paired with a ninja in \textit{max}. \\ 
+    Assume for a contradiction that a ninja $i$ in \textit{min} is paired with a ninja $j$ not in \textit{max}. \\
+    Then all other ninjas in \textit{min} must be paired with a ninja of chakra level $c_j$.\\
+    Since each ninja in \textit{max} has a chakra level greater than $c_j$, each ninja in \textit{max} must be paired with a ninja with chakra level lower than $c_i $ (which is the lowest chakra level in chakra\_levels). This is not possible so we have a contradiction.
+    
+    Since every pairing done in the algorithm is a pairing between a ninja in \textit{min} and a ninja in \textit{max}, each pairing returned by the algorithm will have the same chakra level.
+    
+    \item[(b)] We will prove {\sc{ManyNinja}} is NP-complete. 
+
+    First, we will show that it is in NP. Suppose we are given 2 squads of ninja (advice). Let $n=$ the total number of ninja. In polynomial time, we can check that the two squads are equal in size ($\bigO(n)$), and also check that the sum of their chakra levels are equal ($\bigO(n)$). If the advice meets both conditions, we can definitively say the answer to the decision problem is ``yes". However, if the advice does not meet both conditions, we cannot definitively answer ``no" to the decision problem.
+
+    Next, we will reduce the {\sc{Partition}} problem to the {\sc{ManyNinja}} problem.
+    \begin{itemize}
+        \item First, we will show that a ``YES" answer to the {\sc{Partition}} problem implies a ``YES" answer to the {\sc{ManyNinja}} problem. Suppose we have an instance of the {\sc{Partition}} problem which has a valid solution (i.e. for our multiset $S$ of positive integers, there exists some $S' \subseteq S$ s.t. $S\setminus S'$ and $S'$ have the same sum). Let $X=S'$ and $Y=S \setminus S'$. Let $n=|X|+|Y|$. Add $n-|X|$ zeros to $X$ and $n-|Y|$ zeros to $Y$. Now, the two modified sets have equal cardinalities and equal sums. Next, since all ninja must have positive integer chakra levels, we add 1 to each element's value (in both $X$ and $Y$) to make sure there are no zeros. Since the sets have equal cardinalities, their sums are increased by the same amount, and their sums remain equal. Let each element be a ninja's chakra level. Then, we have partitioned $2n$ ninja into 2 squads of $n$ ninja each, where each squad's total chakra level is the same.
+        \item Next, we will show that a ``YES" answer to the {\sc{ManyNinja}} problem implies a ``YES" answer to the {\sc{Partition}} problem. Suppose we have an instance of the {\sc{ManyNinja}} problem which has a valid solution. Let the two ninja squads in the solution be called $A$ and $B$. We know $A$ and $B$ have the same chakra level sums. Let multiset $S = A \cup B$ and $S'=A$. Convert each ninja $i$ into its positive integer chakra level $c_i$. Since $S'=A$ and $S \setminus S'=B$ have equal sums, we have constructed a valid solution to the {\sc{Partition}} problem.
+    \end{itemize} 
+    Since {\sc{ManyNinja}} is in NP and {\sc{Partition}} is reducible to {\sc{ManyNinja}}, {\sc{ManyNinja}} must also be NP-complete.
+
+\end{enumerate}
+
+
+\section{Question 4}
+\begin{enumerate}
+    \item[(a)]Advice: $S$, which is a choice of k villages (vertices)
+    
+    Let $G = (V, E)$ be the original graph. To determine if every cycle contains at least one of the k villages, consider the sub-graph G' with vertices $V - S$ and edges $E - \{\text{edges in E with an endpoint in }S\}$.
+    
+    \emph{Claim:} $S$ is a valid solution if $G'$ does not have a cycle. \emph{Justification:} Assume $G'$ does not have a cycle. Then there is no cycle in $G$ consisting only of vertices that are not in $S$. Therefore all cycles in $G$ must have at least one vertex in $S$.
+    
+    Since constructing $G'$ and checking for a cycle in $G'$ can both be done in polynomial time, the problem is in NP.
+    
+    \item[(b)] We want to show that Vertex Cover $\leq_p$ This problem
+    
+    Vertex Cover:\\
+    Input: An undirected graph $G = (V,E)$ and positive integer k.\\
+    Output: Does there exist a subset $S \subset V$ of $|S| = k$ vertices such that at least one of the endpoints of every edge is in $S$?
+    
+    The problem we are solving, is given a directed graph, we want to pick k villages such that for every cycle, there exists at least one village in the cycle that is chosen.\\
+    
+    So, given a setup of Vertex Cover, change it as follows for an instance of our problem for directed graph $G' = (V', E')$ for $k'$ chosen villages:
+    \begin{itemize}
+        \item For each $v \in V$, have $v_{in}, v_{out}$ be added to $V'$ and add a directed edge $(v_{in}, v_{out})$ to $E'$.
+        \item For each $(u, v) \in E$, add an edge $(u_{out}, v_{in})$ and an edge $(v_{out}, u_{in})$ to $E'$.
+        \item $k' = k$ villages chosen
+    \end{itemize}
+    We want to show that $G$ has a vertex cover of size at most $k$ if and only if $G'$ has a solution where at most $k'$ villages are chosen to be guarded.\\
+    \\
+    First, $G$ has a vertex cover of size at most $k$ $\implies$ $G'$ has a solution with $k'$ villages chosen.\\
+    Assume that $G$ has a vertex cover $S$ where $|S| \leq k$. This means that every edge in graph $G$ has at least one endpoint in this set $S$.\\
+    For $S'$ set of villages from graph $G'$, we want to choose these same $k' = k$ nodes/villages from the vertex cover set $S$. Whether we pick $v_{in}$ or $v_{out}$ for $v \in S$ does not make a difference, but let us choose $v_{in}$.\\
+    
+    Let us look at any vertex $v_{out}$. For any path to enter this vertex, it must go through $v_{in}$ since the only edge entering $v_{out}$ is $(v_{in}, v_{out})$.\\
+    Also look at any vertex $v_{in}$. The only edge that leaves this node is $(v_{in}, v_{out})$ so, for a path to exit this vertex, it must first go through $v_{out}$\\
+    Now pick any cycle existing in $G'$. There must be an 'in' vertex somewhere in this cycle since the 'out' vertices do not connect from other 'out' vertices since the only entering edges of 'out' vertices are 'in vertices as stated above.\\
+    
+    Let us look at an arbitrary node $v_{in}$ which is in a cycle.\\
+    The entering edge comes from some vertex $u_{out}$ and the exiting edge must be $(v_{in}, v_{out})$.\\
+    we also know that $u_{out}$ must come from $u_{in}$ so, the cycle must also have edge $(u_{in}, u_{out})$.\\
+    This means that in graph G, there is an edge between u and v, by definition of our setup.\\
+    We know that either $u_{in}$ or $v_{in}$ are chosen since one of u or v must be in the vertex cover for edge $(u, v) \in E$ for graph $G$.\\
+    
+    Therefore, if $G$ has a vertex cover of size $k$, then $G'$ can choose $k' = k$ villages to be guarded as well.\\
+    \\
+    Second, $G$ has a vertex cover of size at most $k$ $\impliedby$ $G'$ has a solution with $k'$ villages chosen.\\
+    Assume that $G'$ has a solution where $k'$ villages are chosen.\\
+    I want to show that there is a corresponding vertex cover of size $k$ for graph $G$.\\
+    For the set $S$ to be a vertex cover, we want to choose $v \in V$ for set $S$ when $v_{in} \in S'$.\\
+    By contradiction, suppose that there is no way to select $k$ vertices in graph $G$ such that each edge has at least one endpoint selected.\\
+    This means that for some edge $(u,v) \in E$, neither u nor v are selected.\\
+    Then in $G'$ the cycle $(u_{in}, u_{out}), (u_{out}, v_{in}), (v_{in}, v_{out}) ,(v_{out}, u_{in})$ has both $u_{in}$ and $v_{in}$ not selected.\\
+    This is a contradiction to the assumption since there would be a cycle in graph $G'$ that has no vertex selected, meaning there is no solution where $k'$ villages are chosen.\\
+    Therefore, $(G, k)$ must have a vertex cover of size at most $k' = k$.\\
+    \\
+    Since this problem is in NP and is NP-hard, it follows that it is NP-complete.\\
+\end{enumerate}
+\end{document}
